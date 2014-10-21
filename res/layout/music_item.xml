@@ -40,6 +40,13 @@
         android:layout_alignLeft="@+id/textViewTitle"
         android:layout_alignParentRight="true"
         android:text="Duration" />
+    
+    <ImageView android:layout_width="wrap_content"
+        android:id="@+id/mediaControl"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/ic_media_play"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"/>
 
     
 

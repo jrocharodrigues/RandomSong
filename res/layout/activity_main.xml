@@ -3,23 +3,24 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
-    android:weightSum="100" >
+    android:weightSum="100" 
+    android:gravity="right">
 
     <ListView
         android:id="@+id/listView1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="10dp"
-        android:layout_weight="90" >
+        android:layout_weight="90" 
+        android:listSelector="@drawable/list_selector" >
     </ListView>
 
-    <MediaController
-        android:id="@+id/mediaController1"
-        android:layout_width="match_parent"
+    <include
+        android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_weight="10" >
-
-    </MediaController>
+        android:layout_weight="10"
+        android:layout_margin="10dp"
+        layout="@layout/player_controls" />
 
 </LinearLayout>
 
