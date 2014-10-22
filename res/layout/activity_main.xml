@@ -6,15 +6,21 @@
     android:weightSum="100" 
     android:gravity="right">
 
+	<com.google.android.youtube.player.YouTubePlayerView
+        android:id="@+id/youtube_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        android:layout_weight="20"/>
+	    
     <ListView
         android:id="@+id/listView1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="10dp"
-        android:layout_weight="90" 
-        android:listSelector="@drawable/list_selector" >
+        android:layout_weight="70" 
+       >
     </ListView>
-
+<!-- android:listSelector="@drawable/list_selector" -->
     <include
         android:layout_width="wrap_content"
         android:layout_height="0dp"

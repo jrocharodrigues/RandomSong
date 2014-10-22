@@ -2,9 +2,19 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-
-    <ImageButton
+	 <ImageButton
         android:id="@+id/mediaControlPrev"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/playercontrol_selector"
+        android:clickable="true"
+        android:onClick="handlePlayerControls"
+        android:src="@android:drawable/ic_media_previous" />
+   
+    <ImageButton
+        android:id="@+id/mediaControlPlay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -14,16 +24,7 @@
         android:onClick="handlePlayerControls"
         android:src="@android:drawable/ic_media_play" />
 
-    <ImageButton
-        android:id="@+id/mediaControlPlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:background="@drawable/playercontrol_selector"
-        android:clickable="true"
-        android:onClick="handlePlayerControls"
-        android:src="@android:drawable/ic_media_previous" />
+   
 
     <ImageButton
         android:id="@+id/mediaControlNext"
