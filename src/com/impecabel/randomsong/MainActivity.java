@@ -3,13 +3,11 @@ package com.impecabel.randomsong;
 import java.util.ArrayList;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +22,8 @@ import com.google.android.youtube.player.YouTubeThumbnailView.OnInitializedListe
 import com.impecabel.randomsong.DownloadMusic.OnFinish;
 
 public class MainActivity extends YouTubeBaseActivity implements
-		YouTubePlayer.OnInitializedListener, OnInitializedListener {
+		YouTubePlayer.OnInitializedListener, OnInitializedListener,
+	    YouTubePlayer.OnFullscreenListener {
 	public boolean flag_loading = false;
 	private ArrayList<Song> music;
 	@SuppressWarnings("serial")
@@ -35,7 +34,7 @@ public class MainActivity extends YouTubeBaseActivity implements
 			add(new Card());
 		}
 	};
-	
+
 	private int selectedListItem = -1;
 	private YouTubePlayer YPlayer;
 	private static final int RECOVERY_DIALOG_REQUEST = 1;
@@ -45,57 +44,52 @@ public class MainActivity extends YouTubeBaseActivity implements
 	private View frontCard;
 	private View middleCard;
 	private View backCard;
-	/*boolean fromOrientation=false;
-    SharedPreferences myPrefLogin;
-    Editor prefsEditor;*/
-	
+
+	private View otherViews;
+	private boolean fullscreen;
+
+	/*
+	 * boolean fromOrientation=false; SharedPreferences myPrefLogin; Editor
+	 * prefsEditor;
+	 */
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);		
-        setContentView(R.layout.activity_main);
-        
-        
-        YouTubePlayerView youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		otherViews = findViewById(R.id.other_views);
+
+		YouTubePlayerView youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
 		youTubeView.initialize(Utils.DEVELOPER_KEY, this);
-		
-		/*myPrefLogin = this.getSharedPreferences(Utils.PREFS_NAME, Context.MODE_PRIVATE);
-		prefsEditor = myPrefLogin.edit();        
-        fromOrientation = myPrefLogin.getBoolean("fromOrient", false);*/
-        frontCard = (View) findViewById(R.id.frontCard);
-		middleCard = (View) findViewById(R.id.middleCard);
-		backCard = (View) findViewById(R.id.backCard);
-		music = new ArrayList<Song>();
-		additems(music, false);
-       /* if(!fromOrientation)
-        {
-        	
-			
-        }*/
-		
+		doLayout();
 
 	}
-	
-	/*@Override
-    public Object onRetainNonConfigurationInstance() {
-         prefsEditor.putBoolean("fromOrient", true);
-         prefsEditor.commit();
-        return null;
-    }
-	
+
+	private void doLayout() {
+		if (fullscreen) {
+
+			otherViews.setVisibility(View.GONE);
+		} else {
+			// This layout is up to you - this is just a simple example
+			// (vertically stacked boxes in
+			// portrait, horizontally stacked in landscape).
+			otherViews.setVisibility(View.VISIBLE);
+			frontCard = (View) findViewById(R.id.frontCard);
+			middleCard = (View) findViewById(R.id.middleCard);
+			backCard = (View) findViewById(R.id.backCard);
+			music = new ArrayList<Song>();
+			additems(music, false);
+
+		}
+	}
+
 	@Override
-    protected void onDestroy() {
-       if(fromOrientation)
-       {
-        prefsEditor.putBoolean("fromOrient", false);
-        prefsEditor.commit();
-        }
-        super.onDestroy();
-    }  */
+	public void onFullscreen(boolean isFullscreen) {
+		fullscreen = isFullscreen;
+		doLayout();
+	}
 
-
-	private void populateCard(View cardView, Song song, int position,
-			int cardPosition) {
+	void populateCard(View cardView, Song song, int position, int cardPosition) {
 
 		TextView tvTitle = (TextView) cardView.findViewById(R.id.textViewTitle);
 		TextView tvArtist = (TextView) cardView
@@ -184,16 +178,17 @@ public class MainActivity extends YouTubeBaseActivity implements
 				populateCard(middleCard, music.get(frontCardSongPos),
 						frontCardSongPos, MIDDLE_CARD_ID);
 			}
-			
+
 			Song selectedSong = music.get(selectedListItem);
 
-			populateCard(frontCard, selectedSong,
-					selectedListItem, FRONT_CARD_ID);			
-			
-			if (YPlayer.isPlaying())
-				YPlayer.loadVideo(selectedSong.getVideo_id());
-			else
-				YPlayer.cueVideo(selectedSong.getVideo_id());
+			populateCard(frontCard, selectedSong, selectedListItem,
+					FRONT_CARD_ID);
+
+			/*
+			 * if (YPlayer.isPlaying())
+			 * YPlayer.loadVideo(selectedSong.getVideo_id()); else
+			 * YPlayer.cueVideo(selectedSong.getVideo_id());
+			 */
 		}
 
 	}
@@ -242,7 +237,12 @@ public class MainActivity extends YouTubeBaseActivity implements
 			YouTubePlayer player, boolean wasRestored) {
 		if (!wasRestored) {
 			YPlayer = player;
-			//YPlayer.cueVideo(Utils.TEST_VIDEO); // your video to play
+			YPlayer.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CONTROL_SYSTEM_UI);
+			YPlayer.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CONTROL_ORIENTATION);
+			YPlayer.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE);
+			YPlayer.setOnFullscreenListener(this);
+			YPlayer.cueVideo(Utils.TEST_VIDEO); // your video to play
+
 		}
 
 	}
