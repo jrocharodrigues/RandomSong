@@ -51,8 +51,9 @@ public class DownloadMusic extends AsyncTask<ArrayList<Song>, Void, ArrayList<So
 					String id = ja.getJSONObject(i).getString("id");
 					String artist = ja.getJSONObject(i).getString("artist");					
 					String title = ja.getJSONObject(i).getString("title");
+					String video_id = ja.getJSONObject(i).getString("video_id");
 					
-					music.add(new Song(id, title, artist));
+					music.add(new Song(id, title, artist, video_id));
 				}
 				return music;
 			} catch (JSONException e) {

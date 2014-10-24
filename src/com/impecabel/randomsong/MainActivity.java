@@ -3,15 +3,14 @@ package com.impecabel.randomsong;
 import java.util.ArrayList;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.youtube.player.YouTubeBaseActivity;
@@ -19,108 +18,106 @@ import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayer.Provider;
 import com.google.android.youtube.player.YouTubePlayerView;
+import com.google.android.youtube.player.YouTubeThumbnailLoader;
+import com.google.android.youtube.player.YouTubeThumbnailView;
+import com.google.android.youtube.player.YouTubeThumbnailView.OnInitializedListener;
 import com.impecabel.randomsong.DownloadMusic.OnFinish;
 
 public class MainActivity extends YouTubeBaseActivity implements
-		YouTubePlayer.OnInitializedListener {
+		YouTubePlayer.OnInitializedListener, OnInitializedListener {
 	public boolean flag_loading = false;
 	private ArrayList<Song> music;
-	private int mLastClickedPosition = -1;
+	@SuppressWarnings("serial")
+	private ArrayList<Card> cards = new ArrayList<Card>() {
+		{
+			add(new Card());
+			add(new Card());
+			add(new Card());
+		}
+	};
+	
 	private int selectedListItem = -1;
-	private int statusPrev = 0;
-	private int nextStatusPrev = 0;
 	private YouTubePlayer YPlayer;
-	private static final String YoutubeDeveloperKey = "YOUR_DEVELOPER_KEY_GOES_HERE";
 	private static final int RECOVERY_DIALOG_REQUEST = 1;
+	private static final int BACK_CARD_ID = 2;
+	private static final int MIDDLE_CARD_ID = 1;
+	private static final int FRONT_CARD_ID = 0;
+	private View frontCard;
+	private View middleCard;
+	private View backCard;
+	/*boolean fromOrientation=false;
+    SharedPreferences myPrefLogin;
+    Editor prefsEditor;*/
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-
-		YouTubePlayerView youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
+		super.onCreate(savedInstanceState);		
+        setContentView(R.layout.activity_main);
+        
+        
+        YouTubePlayerView youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
 		youTubeView.initialize(Utils.DEVELOPER_KEY, this);
-
+		
+		/*myPrefLogin = this.getSharedPreferences(Utils.PREFS_NAME, Context.MODE_PRIVATE);
+		prefsEditor = myPrefLogin.edit();        
+        fromOrientation = myPrefLogin.getBoolean("fromOrient", false);*/
+        frontCard = (View) findViewById(R.id.frontCard);
+		middleCard = (View) findViewById(R.id.middleCard);
+		backCard = (View) findViewById(R.id.backCard);
 		music = new ArrayList<Song>();
-		additems(music, 0, false);
-		ListView lv1 = (ListView) findViewById(R.id.listView1);
-		lv1.setOnScrollListener(new OnScrollListener() {
-			@Override
-			public void onScrollStateChanged(AbsListView view, int scrollState) {
-			}
+		additems(music, false);
+       /* if(!fromOrientation)
+        {
+        	
+			
+        }*/
+		
 
-			@Override
-			public void onScroll(AbsListView view, int firstVisibleItem,
-					int visibleItemCount, int totalItemCount) {
-				if (firstVisibleItem + visibleItemCount == totalItemCount
-						&& totalItemCount != 0) {
-					if (flag_loading == false) {
-						flag_loading = true;
-						additems(music, totalItemCount - 1, true);
-					}
-				}
-			}
-		});
+	}
+	
+	/*@Override
+    public Object onRetainNonConfigurationInstance() {
+         prefsEditor.putBoolean("fromOrient", true);
+         prefsEditor.commit();
+        return null;
+    }
+	
+	@Override
+    protected void onDestroy() {
+       if(fromOrientation)
+       {
+        prefsEditor.putBoolean("fromOrient", false);
+        prefsEditor.commit();
+        }
+        super.onDestroy();
+    }  */
 
-		lv1.setOnItemClickListener(new OnItemClickListener() {
 
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
+	private void populateCard(View cardView, Song song, int position,
+			int cardPosition) {
 
-			/*	Toast.makeText(getApplicationContext(),
-						"Item #" + position + " id " + id + " clicked",
-						Toast.LENGTH_SHORT).show();*/
+		TextView tvTitle = (TextView) cardView.findViewById(R.id.textViewTitle);
+		TextView tvArtist = (TextView) cardView
+				.findViewById(R.id.textViewArtist);
+		TextView tvDuration = (TextView) cardView
+				.findViewById(R.id.textViewDuration);
+		YouTubeThumbnailView ytThumb = (YouTubeThumbnailView) cardView
+				.findViewById(R.id.youtubethumbnailview);
 
-				// here, "position" is the position of your item and "id" is
-				// your
-				// item's id in your data set.
+		tvTitle.setText(song.getTitle());
+		tvArtist.setText(song.getArtist());
+		tvDuration.setText(song.getDuration());
 
-				// mLastClickedPosition is a member field of type long which
-				// stores the position of the most recently clicked item,
-				// initially set to -1
-				if (mLastClickedPosition != -1) {
-					// do something to pause the item in your list at this
-					// position
-					if (parent != null) {
-						View lastItem = (View) parent
-								.getChildAt(mLastClickedPosition);
+		ytThumb.setTag(song.getVideo_id());
+		ytThumb.initialize(Utils.DEVELOPER_KEY, this);
 
-						ImageView lastImageView = (ImageView) lastItem
-								.findViewById(R.id.mediaControl);
-						lastImageView
-								.setImageResource(android.R.drawable.ic_media_play);
-						nextStatusPrev = 1;
-
-					}
-
-				}
-
-				if (mLastClickedPosition != position || statusPrev == 1) {
-					nextStatusPrev = 0;
-
-					// next, update mLastClickedPosition
-					mLastClickedPosition = position;
-					selectedListItem = position;
-
-					// find the image in your view and update it
-					ImageView imageView = (ImageView) view
-							.findViewById(R.id.mediaControl);
-					imageView
-							.setImageResource(android.R.drawable.ic_media_pause);
-
-				}
-				statusPrev = nextStatusPrev;
-
-			}
-
-		});
-		lv1.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		cards.set(cardPosition, new Card(position, ytThumb));
 
 	}
 
-	private void additems(ArrayList<Song> music, final int lastVisiblePos,
-			final boolean refreshOnly) {
+	@SuppressWarnings("unchecked")
+	private void additems(ArrayList<Song> music, final boolean refreshOnly) {
 		final ProgressDialog dialog = new ProgressDialog(this);
 
 		dialog.setMessage("Loading...");
@@ -134,7 +131,7 @@ public class MainActivity extends YouTubeBaseActivity implements
 					public void finishOk(ArrayList<Song> result) {
 						Toast.makeText(getApplicationContext(), "List Ready!",
 								Toast.LENGTH_LONG).show();
-						showResult(result, lastVisiblePos, refreshOnly);
+						changeSelected(1);
 						dialog.dismiss();
 						flag_loading = false;
 					}
@@ -152,21 +149,6 @@ public class MainActivity extends YouTubeBaseActivity implements
 		dl.execute(music);
 	}
 
-	private void showResult(ArrayList<Song> music, int lastVisiblePos,
-			boolean refreshOnly) {
-		ListView lv1 = (ListView) findViewById(R.id.listView1);
-		CustomAdapter adapter = new CustomAdapter(this, music);
-		if (refreshOnly == false) {
-			lv1.setAdapter(adapter);
-		} else {
-			adapter.notifyDataSetChanged();
-		}
-
-		lv1.setItemChecked(lastVisiblePos, true);
-		ensureVisible(lv1, lastVisiblePos);
-
-	}
-
 	public void handlePlayerControls(View v) {
 
 		if (v == findViewById(R.id.mediaControlPrev)) {
@@ -181,55 +163,39 @@ public class MainActivity extends YouTubeBaseActivity implements
 	}
 
 	private void changeSelected(int way) {
-		
+
 		selectedListItem = selectedListItem + (way);
-		ListView lv1 = (ListView) findViewById(R.id.listView1);
-		
-		int first = lv1.getFirstVisiblePosition();
-		int last = lv1.getLastVisiblePosition();
-		int listCount = lv1.getCount();
-		if (selectedListItem < 0) {
-			selectedListItem = 0;
-		} else if (selectedListItem >= listCount) {
-			selectedListItem = listCount;
+
+		if (selectedListItem > music.size() - 1)
+			additems(music, true);
+		else {
+			int middleCardSongPos = cards.get(MIDDLE_CARD_ID)
+					.getSong_position();
+
+			if (middleCardSongPos != -1) {
+				// if middle card has information, moves this to back card
+				populateCard(backCard, music.get(middleCardSongPos),
+						middleCardSongPos, BACK_CARD_ID);
+			}
+
+			int frontCardSongPos = cards.get(FRONT_CARD_ID).getSong_position();
+			if (frontCardSongPos != -1) {
+				// if front card has information, moves this to back card
+				populateCard(middleCard, music.get(frontCardSongPos),
+						frontCardSongPos, MIDDLE_CARD_ID);
+			}
+			
+			Song selectedSong = music.get(selectedListItem);
+
+			populateCard(frontCard, selectedSong,
+					selectedListItem, FRONT_CARD_ID);			
+			
+			if (YPlayer.isPlaying())
+				YPlayer.loadVideo(selectedSong.getVideo_id());
+			else
+				YPlayer.cueVideo(selectedSong.getVideo_id());
 		}
 
-		Toast.makeText(getApplicationContext(),
-				"selectedListItem " + selectedListItem, Toast.LENGTH_LONG)
-				.show();
-
-		if (selectedListItem != mLastClickedPosition) {
-			//ensureVisible(lv1, selectedListItem);
-			lv1.setItemChecked(selectedListItem, true);
-			//lv1.performItemClick(lv1.getChildAt(selectedListItem),
-			//		selectedListItem, lv1.getItemIdAtPosition(selectedListItem));
-			ensureVisible(lv1, selectedListItem);
-			lv1.getAdapter().getView(selectedListItem, null, null).performClick();
-		}
-
-	}
-
-	public static void ensureVisible(ListView listView, int pos) {
-		if (listView == null) {
-			return;
-		}
-
-		if (pos < 0 || pos >= listView.getCount()) {
-			return;
-		}
-
-		int first = listView.getFirstVisiblePosition();
-		int last = listView.getLastVisiblePosition();
-
-		if (pos < first) {
-			listView.smoothScrollToPosition(pos);
-			return;
-		}
-
-		if (pos >= last) {
-			listView.setSelection(1 + pos - (last - first));
-			return;
-		}
 	}
 
 	private void tooglePlay() {
@@ -276,8 +242,24 @@ public class MainActivity extends YouTubeBaseActivity implements
 			YouTubePlayer player, boolean wasRestored) {
 		if (!wasRestored) {
 			YPlayer = player;
-			YPlayer.cueVideo(Utils.TEST_VIDEO); // your video to play
+			//YPlayer.cueVideo(Utils.TEST_VIDEO); // your video to play
 		}
+
+	}
+
+	@Override
+	public void onInitializationFailure(YouTubeThumbnailView view,
+			YouTubeInitializationResult errorReason) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onInitializationSuccess(YouTubeThumbnailView view,
+			YouTubeThumbnailLoader loader) {
+		String videoId = (String) view.getTag();
+		view.setImageResource(R.drawable.ic_launcher);
+		loader.setVideo(videoId);
 
 	}
 

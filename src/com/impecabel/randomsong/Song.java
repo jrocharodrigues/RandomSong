@@ -6,15 +6,15 @@ public class Song {
 	private String artist;
 	private String duration;
 	private String thumbUrl;
-	private String lyrics;
+	private String video_id;
 	
-	public Song( String id, String title, String artist) {
+	public Song( String id, String title, String artist, String video_id) {
 		this.id = Integer.parseInt(id);
 		this.title = title;
 		this.artist = artist;
 		this.duration = null;
 		this.thumbUrl = null;
-		this.lyrics = null;
+		this.setVideo_id(video_id);
 	}
 
 	public int getId() {
@@ -56,18 +56,22 @@ public class Song {
 	public void setThumbUrl(String thumbUrl) {
 		this.thumbUrl = thumbUrl;
 	}
-
-	public String getLyrics() {
-		return lyrics;
-	}
-
-	public void setLyrics(String lyrics) {
-		this.lyrics = lyrics;
-	}
 	
+	public String getVideo_id() {
+		return video_id;
+	}
+
+	public void setVideo_id(String video_id) {
+		this.video_id = video_id;
+	}
+
 	@Override
 	public String toString() {
 		return artist + " - " + title;
 	}
+	
+	
+
+
 
 }

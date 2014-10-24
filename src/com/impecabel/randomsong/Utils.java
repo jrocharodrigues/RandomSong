@@ -9,6 +9,7 @@ public class Utils {
     */
     public static final String DEVELOPER_KEY = "AIzaSyCoPvqf-bthT7iJ4WFwNvfto5Uy9ChR9Qw"; 
     public static final String TEST_VIDEO = "9dEW2OE_joU"; 
+    public static final String PREFS_NAME = "randomSongPrefsFile";
     
     
 }

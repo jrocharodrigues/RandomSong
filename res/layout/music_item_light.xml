@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingTop="10dp"
-    android:background="@android:color/white" >
+    android:background="@android:color/holo_blue_light" >
 
-    <com.google.android.youtube.player.YouTubeThumbnailView
+     <com.google.android.youtube.player.YouTubeThumbnailView
         android:id="@+id/youtubethumbnailview"
         android:layout_width="72dp"
         android:layout_height="72dp"
