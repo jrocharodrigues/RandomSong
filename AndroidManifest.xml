@@ -5,8 +5,13 @@
     android:versionName="1.0" >
 
     <uses-sdk
+<<<<<<< HEAD
         android:minSdkVersion="14"
         android:targetSdkVersion="18" />
+=======
+        android:minSdkVersion="11"
+        android:targetSdkVersion="19" />
+>>>>>>> origin/master
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
