@@ -24,6 +24,9 @@ import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
 import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubeThumbnailView;
+import com.google.android.youtube.player.YouTubePlayer.ErrorReason;
+import com.google.android.youtube.player.YouTubePlayer.PlaybackEventListener;
+import com.google.android.youtube.player.YouTubePlayer.PlayerStateChangeListener;
 import com.google.android.youtube.player.YouTubeThumbnailView.OnInitializedListener;
 import com.impecabel.randomsong.DownloadMusic.OnFinish;
 
@@ -58,6 +61,8 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 	private RetainedFragment dataFragment;
 	private YouTubePlayerView youTubeView;
 	private Song empty_song = new Song();
+	private MyPlayerStateChangeListener myPlayerStateChangeListener;
+	private MyPlaybackEventListener myPlaybackEventListener;
 
 	/*
 	 * boolean fromOrientation=false; SharedPreferences myPrefLogin; Editor
@@ -72,7 +77,11 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 		youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
 		youTubeView.initialize(Utils.DEVELOPER_KEY, this);
+
 		doLayout();
+
+		myPlayerStateChangeListener = new MyPlayerStateChangeListener();
+		myPlaybackEventListener = new MyPlaybackEventListener();
 
 		// find the retained fragment on activity restarts
 		FragmentManager fm = getFragmentManager();
@@ -182,13 +191,12 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		tvTitle.setText(song.getTitle());
 		tvArtist.setText(song.getArtist());
 		tvDuration.setText(song.getDuration());
-		if (song.getVideo_id() != null){
+		if (song.getVideo_id() != null) {
 			ytThumb.setTag(song.getVideo_id());
 			ytThumb.initialize(Utils.DEVELOPER_KEY, this);
 		} else {
 			ytThumb.setImageResource(R.drawable.ic_launcher);
 		}
-			
 
 		cards.set(cardPosition, new Card(position, ytThumb));
 
@@ -209,7 +217,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 					public void finishOk(ArrayList<Song> result) {
 						Toast.makeText(getApplicationContext(), "List Ready!",
 								Toast.LENGTH_LONG).show();
-						changeSelected(1);
+						changeSelected(1, false);
 						dataFragment.setData(result, cards, selectedListItem);
 
 						dialog.dismiss();
@@ -232,17 +240,17 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 	public void handlePlayerControls(View v) {
 
 		if (v == findViewById(R.id.mediaControlPrev)) {
-			changeSelected(-1);
+			changeSelected(-1, false);
 
 		} else if (v == findViewById(R.id.mediaControlNext)) {
-			changeSelected(1);
+			changeSelected(1, false);
 
 		} else {
 			tooglePlay();
 		}
 	}
 
-	private void changeSelected(int way) {
+	private void changeSelected(int way, boolean forcePlay) {
 
 		selectedListItem = selectedListItem + (way);
 
@@ -251,7 +259,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		else {
 
 			if (selectedListItem < 0) {
-				//we are at the beginning just restart the song
+				// we are at the beginning just restart the song
 				selectedListItem = 0;
 			} else {
 				int backCardSongPos = selectedListItem - BACK_CARD_ID;
@@ -274,7 +282,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 						selectedListItem, FRONT_CARD_ID);
 			}
 
-			if (player.isPlaying())
+			if (player.isPlaying() || forcePlay)
 				player.loadVideo(music.get(selectedListItem).getVideo_id());
 			else
 				player.cueVideo(music.get(selectedListItem).getVideo_id());
@@ -307,6 +315,8 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 			setRequestedOrientation(PORTRAIT_ORIENTATION);
 
 			player.setOnFullscreenListener(this);
+			player.setPlayerStateChangeListener(myPlayerStateChangeListener);
+			player.setPlaybackEventListener(myPlaybackEventListener);
 		}
 
 	}
@@ -317,18 +327,93 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 	}
 
 	@Override
-	public void onInitializationSuccess(YouTubeThumbnailView view,
-			YouTubeThumbnailLoader loader) {
-		String videoId = (String) view.getTag();
-		view.setImageResource(R.drawable.ic_launcher);
-		loader.setVideo(videoId);
+	public void onInitializationSuccess(YouTubeThumbnailView thumbnailView,
+			YouTubeThumbnailLoader thumbnailLoader) {
+		String videoId = (String) thumbnailView.getTag();
+		thumbnailView.setImageResource(R.drawable.ic_launcher);
+		thumbnailLoader.setVideo(videoId);
 
 	}
 
 	@Override
-	public void onInitializationFailure(YouTubeThumbnailView view,
-			YouTubeInitializationResult result) {
-		// TODO Auto-generated method stub
+	public void onInitializationFailure(YouTubeThumbnailView thumbnailView,
+			YouTubeInitializationResult error) {
+		thumbnailView.setImageResource(R.drawable.ic_launcher);
+	}
+
+	public class MyPlaybackEventListener implements PlaybackEventListener {
+
+		@Override
+		public void onBuffering(boolean isBuffering) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onPaused() {
+			ImageView ivPlayButton = (ImageView) findViewById(R.id.mediaControlPlay);
+			ivPlayButton.setImageResource(android.R.drawable.ic_media_play);
+
+		}
+
+		@Override
+		public void onPlaying() {
+			ImageView ivPlayButton = (ImageView) findViewById(R.id.mediaControlPlay);
+			ivPlayButton.setImageResource(android.R.drawable.ic_media_pause);
+		}
+
+		@Override
+		public void onSeekTo(int newPositionMillis) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onStopped() {
+			ImageView ivPlayButton = (ImageView) findViewById(R.id.mediaControlPlay);
+			ivPlayButton.setImageResource(android.R.drawable.ic_media_play);
+
+		}
+
+	}
+
+	public class MyPlayerStateChangeListener implements
+			PlayerStateChangeListener {
+
+		@Override
+		public void onAdStarted() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onError(ErrorReason reason) {
+			changeSelected(1, player.isPlaying());
+
+		}
+
+		@Override
+		public void onLoaded(String videoId) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onLoading() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void onVideoEnded() {
+			changeSelected(1, true);
+		}
+
+		@Override
+		public void onVideoStarted() {
+			// TODO Auto-generated method stub
+
+		}
 
 	}
 
