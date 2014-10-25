@@ -14,18 +14,8 @@ public class Song {
 		this.artist = artist;
 		this.duration = null;
 		this.thumbUrl = null;
-		this.video_id = video_id;
+		this.setVideo_id(video_id);
 	}
-	
-	public Song(){
-		this.id = -1;
-		this.title = "...";
-		this.artist = "...";
-		this.duration = null;
-		this.thumbUrl = null;
-		this.video_id = null;
-	}
-	
 
 	public int getId() {
 		return id;

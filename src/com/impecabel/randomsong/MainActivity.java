@@ -12,6 +12,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -56,7 +57,6 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 	private RetainedFragment dataFragment;
 	private YouTubePlayerView youTubeView;
-	private Song empty_song = new Song();
 
 	/*
 	 * boolean fromOrientation=false; SharedPreferences myPrefLogin; Editor
@@ -137,7 +137,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 			playerParams.height = LayoutParams.MATCH_PARENT;
 			otherViews.setVisibility(View.GONE);
 		} else {
-			LinearLayout.LayoutParams otherViewsParams = (LinearLayout.LayoutParams) otherViews
+			LinearLayout.LayoutParams otherViewsParams = (LinearLayout.LayoutParams)  otherViews
 					.getLayoutParams();
 			// This layout is up to you - this is just a simple example
 			// (vertically stacked boxes in
@@ -244,34 +244,31 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		if (selectedListItem > music.size() - 1)
 			additems(music, true);
 		else {
+			int middleCardSongPos = cards.get(MIDDLE_CARD_ID)
+					.getSong_position();
 
-			if (selectedListItem < 0) {
-				selectedListItem = 0;
-			} else {
-				int backCardSongPos = selectedListItem - BACK_CARD_ID;
-				int middleCardSongPos = selectedListItem - MIDDLE_CARD_ID;
-
-				if (backCardSongPos > 0) {
-					populateCard(backCard, music.get(backCardSongPos),
-							backCardSongPos, BACK_CARD_ID);
-				} else {
-					populateCard(backCard, empty_song, -1, BACK_CARD_ID);
-				}
-				if (middleCardSongPos > 0) {
-					populateCard(middleCard, music.get(middleCardSongPos),
-							middleCardSongPos, MIDDLE_CARD_ID);
-				} else {
-					populateCard(middleCard, empty_song, -1, MIDDLE_CARD_ID);
-				}
-
-				populateCard(frontCard, music.get(selectedListItem),
-						selectedListItem, FRONT_CARD_ID);
+			if (middleCardSongPos != -1) {
+				// if middle card has information, moves this to back card
+				populateCard(backCard, music.get(middleCardSongPos),
+						middleCardSongPos, BACK_CARD_ID);
 			}
 
+			int frontCardSongPos = cards.get(FRONT_CARD_ID).getSong_position();
+			if (frontCardSongPos != -1) {
+				// if front card has information, moves this to back card
+				populateCard(middleCard, music.get(frontCardSongPos),
+						frontCardSongPos, MIDDLE_CARD_ID);
+			}
+
+			Song selectedSong = music.get(selectedListItem);
+
+			populateCard(frontCard, selectedSong, selectedListItem,
+					FRONT_CARD_ID);
+
 			if (player.isPlaying())
-				player.loadVideo(music.get(selectedListItem).getVideo_id());
+				player.loadVideo(selectedSong.getVideo_id());
 			else
-				player.cueVideo(music.get(selectedListItem).getVideo_id());
+				player.cueVideo(selectedSong.getVideo_id());
 
 		}
 
@@ -301,9 +298,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		player.setOnFullscreenListener(this);
 
 		if (!wasRestored) {
-			// player.cueVideo(Utils.TEST_VIDEO); // your video to play
-
-			player.cueVideo(Utils.TEST_VIDEO);
+			player.cueVideo(Utils.TEST_VIDEO); // your video to play
 		}
 
 	}
