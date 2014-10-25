@@ -1,29 +1,34 @@
 package com.impecabel.randomsong;
 
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+
 import java.util.ArrayList;
 
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubePlayer.Provider;
 import com.google.android.youtube.player.YouTubePlayerView;
 import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubeThumbnailView;
 import com.google.android.youtube.player.YouTubeThumbnailView.OnInitializedListener;
 import com.impecabel.randomsong.DownloadMusic.OnFinish;
 
-public class MainActivity extends YouTubeBaseActivity implements
-		YouTubePlayer.OnInitializedListener, OnInitializedListener,
-		YouTubePlayer.OnFullscreenListener {
+public class MainActivity extends YouTubeFailureRecoveryActivity implements
+		OnInitializedListener, YouTubePlayer.OnFullscreenListener {
 	public boolean flag_loading = false;
 	private ArrayList<Song> music;
 	@SuppressWarnings("serial")
@@ -35,9 +40,11 @@ public class MainActivity extends YouTubeBaseActivity implements
 		}
 	};
 
+	private static final int PORTRAIT_ORIENTATION = Build.VERSION.SDK_INT < 9 ? ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+			: ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+
 	private int selectedListItem = -1;
-	private YouTubePlayer YPlayer;
-	private static final int RECOVERY_DIALOG_REQUEST = 1;
+	private YouTubePlayer player;
 	private static final int BACK_CARD_ID = 2;
 	private static final int MIDDLE_CARD_ID = 1;
 	private static final int FRONT_CARD_ID = 0;
@@ -49,6 +56,7 @@ public class MainActivity extends YouTubeBaseActivity implements
 	private boolean fullscreen;
 
 	private RetainedFragment dataFragment;
+	private YouTubePlayerView youTubeView;
 
 	/*
 	 * boolean fromOrientation=false; SharedPreferences myPrefLogin; Editor
@@ -61,7 +69,7 @@ public class MainActivity extends YouTubeBaseActivity implements
 		setContentView(R.layout.activity_main);
 		otherViews = findViewById(R.id.other_views);
 
-		YouTubePlayerView youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
+		youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
 		youTubeView.initialize(Utils.DEVELOPER_KEY, this);
 		doLayout();
 
@@ -121,13 +129,25 @@ public class MainActivity extends YouTubeBaseActivity implements
 	}
 
 	private void doLayout() {
+		LinearLayout.LayoutParams playerParams = (LinearLayout.LayoutParams) youTubeView
+				.getLayoutParams();
+
 		if (fullscreen) {
+			playerParams.width = LayoutParams.MATCH_PARENT;
+			playerParams.height = LayoutParams.MATCH_PARENT;
 			otherViews.setVisibility(View.GONE);
 		} else {
+			LinearLayout.LayoutParams otherViewsParams = (LinearLayout.LayoutParams)  otherViews
+					.getLayoutParams();
 			// This layout is up to you - this is just a simple example
 			// (vertically stacked boxes in
 			// portrait, horizontally stacked in landscape).
 			otherViews.setVisibility(View.VISIBLE);
+			playerParams.width = otherViewsParams.width = MATCH_PARENT;
+			playerParams.height = 0;
+			playerParams.weight = 50;
+			otherViewsParams.height = 0;
+			otherViewsParams.weight = 50;
 			frontCard = (View) findViewById(R.id.frontCard);
 			middleCard = (View) findViewById(R.id.middleCard);
 			backCard = (View) findViewById(R.id.backCard);
@@ -140,13 +160,13 @@ public class MainActivity extends YouTubeBaseActivity implements
 		fullscreen = isFullscreen;
 		doLayout();
 	}
-	
+
 	@Override
-    public void onDestroy() {
-        super.onDestroy();
-        // store the data in the fragment
-        dataFragment.setData(music, cards, selectedListItem);
-    }
+	public void onDestroy() {
+		super.onDestroy();
+		// store the data in the fragment
+		dataFragment.setData(music, cards, selectedListItem);
+	}
 
 	void populateCard(View cardView, Song song, int position, int cardPosition) {
 
@@ -245,11 +265,11 @@ public class MainActivity extends YouTubeBaseActivity implements
 			populateCard(frontCard, selectedSong, selectedListItem,
 					FRONT_CARD_ID);
 
-			/*
-			 * if (YPlayer.isPlaying())
-			 * YPlayer.loadVideo(selectedSong.getVideo_id()); else
-			 * YPlayer.cueVideo(selectedSong.getVideo_id());
-			 */
+			if (player.isPlaying())
+				player.loadVideo(selectedSong.getVideo_id());
+			else
+				player.cueVideo(selectedSong.getVideo_id());
+
 		}
 
 	}
@@ -257,62 +277,35 @@ public class MainActivity extends YouTubeBaseActivity implements
 	private void tooglePlay() {
 		ImageView imageView = (ImageView) findViewById(R.id.mediaControlPlay);
 
-		if (YPlayer.isPlaying()) {
+		if (player.isPlaying()) {
 			imageView.setImageResource(android.R.drawable.ic_media_play);
-			YPlayer.pause();
+			player.pause();
 
 		} else {
 			imageView.setImageResource(android.R.drawable.ic_media_pause);
-			YPlayer.play();
+			player.play();
 		}
 	}
 
 	@Override
-	public void onInitializationFailure(Provider player,
-			YouTubeInitializationResult errorReason) {
-		if (errorReason.isUserRecoverableError()) {
-			errorReason.getErrorDialog(this, RECOVERY_DIALOG_REQUEST).show();
-		} else {
-			String errorMessage = String.format(
-					"There was an error initializing the YouTubePlayer",
-					errorReason.toString());
-			Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
-		}
-
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == RECOVERY_DIALOG_REQUEST) {
-			// Retry initialization if user performed a recovery action
-			getYouTubePlayerProvider().initialize(Utils.DEVELOPER_KEY, this);
-		}
-	}
-
-	protected YouTubePlayer.Provider getYouTubePlayerProvider() {
-		return (YouTubePlayerView) findViewById(R.id.youtube_view);
-	}
-
-	@Override
-	public void onInitializationSuccess(Provider provider,
+	public void onInitializationSuccess(YouTubePlayer.Provider provider,
 			YouTubePlayer player, boolean wasRestored) {
-		if (!wasRestored) {
-			YPlayer = player;
-			YPlayer.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CONTROL_SYSTEM_UI);
-			YPlayer.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CONTROL_ORIENTATION);
-			YPlayer.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE);
-			YPlayer.setOnFullscreenListener(this);
-			YPlayer.cueVideo(Utils.TEST_VIDEO); // your video to play
+		this.player = player;
+		player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT);
+		player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE);
+		setRequestedOrientation(PORTRAIT_ORIENTATION);
 
+		player.setOnFullscreenListener(this);
+
+		if (!wasRestored) {
+			player.cueVideo(Utils.TEST_VIDEO); // your video to play
 		}
 
 	}
 
 	@Override
-	public void onInitializationFailure(YouTubeThumbnailView view,
-			YouTubeInitializationResult errorReason) {
-		// TODO Auto-generated method stub
-
+	protected YouTubePlayer.Provider getYouTubePlayerProvider() {
+		return youTubeView;
 	}
 
 	@Override
@@ -321,6 +314,13 @@ public class MainActivity extends YouTubeBaseActivity implements
 		String videoId = (String) view.getTag();
 		view.setImageResource(R.drawable.ic_launcher);
 		loader.setVideo(videoId);
+
+	}
+
+	@Override
+	public void onInitializationFailure(YouTubeThumbnailView view,
+			YouTubeInitializationResult result) {
+		// TODO Auto-generated method stub
 
 	}
 
