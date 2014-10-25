@@ -2,12 +2,12 @@ package com.impecabel.randomsong;
 
 import java.util.ArrayList;
 
+import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,7 +23,7 @@ import com.impecabel.randomsong.DownloadMusic.OnFinish;
 
 public class MainActivity extends YouTubeBaseActivity implements
 		YouTubePlayer.OnInitializedListener, OnInitializedListener,
-	    YouTubePlayer.OnFullscreenListener {
+		YouTubePlayer.OnFullscreenListener {
 	public boolean flag_loading = false;
 	private ArrayList<Song> music;
 	@SuppressWarnings("serial")
@@ -48,6 +48,8 @@ public class MainActivity extends YouTubeBaseActivity implements
 	private View otherViews;
 	private boolean fullscreen;
 
+	private RetainedFragment dataFragment;
+
 	/*
 	 * boolean fromOrientation=false; SharedPreferences myPrefLogin; Editor
 	 * prefsEditor;
@@ -63,11 +65,63 @@ public class MainActivity extends YouTubeBaseActivity implements
 		youTubeView.initialize(Utils.DEVELOPER_KEY, this);
 		doLayout();
 
+		// find the retained fragment on activity restarts
+		FragmentManager fm = getFragmentManager();
+		dataFragment = (RetainedFragment) fm.findFragmentByTag("data");
+
+		// create the fragment and data the first time
+		if (dataFragment == null) {
+			// add the fragment
+			dataFragment = new RetainedFragment();
+			fm.beginTransaction().add(dataFragment, "data").commit();
+			// load the data from the web
+			music = new ArrayList<Song>();
+			additems(music, false);
+		} else {
+			music = dataFragment.getMusic();
+			cards = dataFragment.getCards();
+			selectedListItem = dataFragment.getSelectedListItem();
+			if (!fullscreen) {
+				refreshCards();
+			}
+		}
+
+	}
+
+	private void refreshCards() {
+
+		int backCardSongPos = cards.get(BACK_CARD_ID).getSong_position();
+
+		if (backCardSongPos != -1) {
+			// if middle card has information, moves this to back card
+			populateCard(backCard, music.get(backCardSongPos), backCardSongPos,
+					BACK_CARD_ID);
+		}
+		int middleCardSongPos = cards.get(MIDDLE_CARD_ID).getSong_position();
+
+		if (middleCardSongPos != -1) {
+			// if middle card has information, moves this to back card
+			populateCard(middleCard, music.get(middleCardSongPos),
+					middleCardSongPos, MIDDLE_CARD_ID);
+		}
+
+		int frontCardSongPos = cards.get(FRONT_CARD_ID).getSong_position();
+		if (frontCardSongPos != -1) {
+			// if front card has information, moves this to back card
+			populateCard(frontCard, music.get(frontCardSongPos),
+					frontCardSongPos, FRONT_CARD_ID);
+		}
+
+		/*
+		 * if (YPlayer.isPlaying())
+		 * YPlayer.loadVideo(selectedSong.getVideo_id()); else
+		 * YPlayer.cueVideo(selectedSong.getVideo_id());
+		 */
+
 	}
 
 	private void doLayout() {
 		if (fullscreen) {
-
 			otherViews.setVisibility(View.GONE);
 		} else {
 			// This layout is up to you - this is just a simple example
@@ -77,8 +131,6 @@ public class MainActivity extends YouTubeBaseActivity implements
 			frontCard = (View) findViewById(R.id.frontCard);
 			middleCard = (View) findViewById(R.id.middleCard);
 			backCard = (View) findViewById(R.id.backCard);
-			music = new ArrayList<Song>();
-			additems(music, false);
 
 		}
 	}
@@ -88,6 +140,13 @@ public class MainActivity extends YouTubeBaseActivity implements
 		fullscreen = isFullscreen;
 		doLayout();
 	}
+	
+	@Override
+    public void onDestroy() {
+        super.onDestroy();
+        // store the data in the fragment
+        dataFragment.setData(music, cards, selectedListItem);
+    }
 
 	void populateCard(View cardView, Song song, int position, int cardPosition) {
 
@@ -126,6 +185,8 @@ public class MainActivity extends YouTubeBaseActivity implements
 						Toast.makeText(getApplicationContext(), "List Ready!",
 								Toast.LENGTH_LONG).show();
 						changeSelected(1);
+						dataFragment.setData(result, cards, selectedListItem);
+
 						dialog.dismiss();
 						flag_loading = false;
 					}
