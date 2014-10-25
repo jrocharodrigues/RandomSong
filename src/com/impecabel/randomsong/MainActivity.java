@@ -57,6 +57,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 	private RetainedFragment dataFragment;
 	private YouTubePlayerView youTubeView;
+	private Song empty_song = new Song();
 
 	/*
 	 * boolean fromOrientation=false; SharedPreferences myPrefLogin; Editor
@@ -137,7 +138,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 			playerParams.height = LayoutParams.MATCH_PARENT;
 			otherViews.setVisibility(View.GONE);
 		} else {
-			LinearLayout.LayoutParams otherViewsParams = (LinearLayout.LayoutParams)  otherViews
+			LinearLayout.LayoutParams otherViewsParams = (LinearLayout.LayoutParams) otherViews
 					.getLayoutParams();
 			// This layout is up to you - this is just a simple example
 			// (vertically stacked boxes in
@@ -181,9 +182,13 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		tvTitle.setText(song.getTitle());
 		tvArtist.setText(song.getArtist());
 		tvDuration.setText(song.getDuration());
-
-		ytThumb.setTag(song.getVideo_id());
-		ytThumb.initialize(Utils.DEVELOPER_KEY, this);
+		if (song.getVideo_id() != null){
+			ytThumb.setTag(song.getVideo_id());
+			ytThumb.initialize(Utils.DEVELOPER_KEY, this);
+		} else {
+			ytThumb.setImageResource(R.drawable.ic_launcher);
+		}
+			
 
 		cards.set(cardPosition, new Card(position, ytThumb));
 
@@ -244,31 +249,35 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		if (selectedListItem > music.size() - 1)
 			additems(music, true);
 		else {
-			int middleCardSongPos = cards.get(MIDDLE_CARD_ID)
-					.getSong_position();
 
-			if (middleCardSongPos != -1) {
-				// if middle card has information, moves this to back card
-				populateCard(backCard, music.get(middleCardSongPos),
-						middleCardSongPos, BACK_CARD_ID);
+			if (selectedListItem < 0) {
+				//we are at the beginning just restart the song
+				selectedListItem = 0;
+			} else {
+				int backCardSongPos = selectedListItem - BACK_CARD_ID;
+				int middleCardSongPos = selectedListItem - MIDDLE_CARD_ID;
+
+				if (backCardSongPos >= 0) {
+					populateCard(backCard, music.get(backCardSongPos),
+							backCardSongPos, BACK_CARD_ID);
+				} else {
+					populateCard(backCard, empty_song, -1, BACK_CARD_ID);
+				}
+				if (middleCardSongPos >= 0) {
+					populateCard(middleCard, music.get(middleCardSongPos),
+							middleCardSongPos, MIDDLE_CARD_ID);
+				} else {
+					populateCard(middleCard, empty_song, -1, MIDDLE_CARD_ID);
+				}
+
+				populateCard(frontCard, music.get(selectedListItem),
+						selectedListItem, FRONT_CARD_ID);
 			}
-
-			int frontCardSongPos = cards.get(FRONT_CARD_ID).getSong_position();
-			if (frontCardSongPos != -1) {
-				// if front card has information, moves this to back card
-				populateCard(middleCard, music.get(frontCardSongPos),
-						frontCardSongPos, MIDDLE_CARD_ID);
-			}
-
-			Song selectedSong = music.get(selectedListItem);
-
-			populateCard(frontCard, selectedSong, selectedListItem,
-					FRONT_CARD_ID);
 
 			if (player.isPlaying())
-				player.loadVideo(selectedSong.getVideo_id());
+				player.loadVideo(music.get(selectedListItem).getVideo_id());
 			else
-				player.cueVideo(selectedSong.getVideo_id());
+				player.cueVideo(music.get(selectedListItem).getVideo_id());
 
 		}
 
@@ -290,15 +299,14 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 	@Override
 	public void onInitializationSuccess(YouTubePlayer.Provider provider,
 			YouTubePlayer player, boolean wasRestored) {
-		this.player = player;
-		player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT);
-		player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE);
-		setRequestedOrientation(PORTRAIT_ORIENTATION);
-
-		player.setOnFullscreenListener(this);
 
 		if (!wasRestored) {
-			player.cueVideo(Utils.TEST_VIDEO); // your video to play
+			this.player = player;
+			player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT);
+			player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE);
+			setRequestedOrientation(PORTRAIT_ORIENTATION);
+
+			player.setOnFullscreenListener(this);
 		}
 
 	}
