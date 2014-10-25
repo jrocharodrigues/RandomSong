@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,14 +18,13 @@ import com.google.android.youtube.player.YouTubePlayerView;
 import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubeThumbnailView;
 import com.google.android.youtube.player.YouTubeThumbnailView.OnInitializedListener;
-import com.impecabel.randomsong.DownloadMusic.OnFinish;
+import com.squareup.otto.Subscribe;
 
 public class MainActivity extends YouTubeBaseActivity implements
 		YouTubePlayer.OnInitializedListener, OnInitializedListener,
-	    YouTubePlayer.OnFullscreenListener {
+		YouTubePlayer.OnFullscreenListener {
 	public boolean flag_loading = false;
 	private ArrayList<Song> music;
-	@SuppressWarnings("serial")
 	private ArrayList<Card> cards = new ArrayList<Card>() {
 		{
 			add(new Card());
@@ -47,7 +45,6 @@ public class MainActivity extends YouTubeBaseActivity implements
 
 	private View otherViews;
 	private boolean fullscreen;
-
 	/*
 	 * boolean fromOrientation=false; SharedPreferences myPrefLogin; Editor
 	 * prefsEditor;
@@ -61,6 +58,7 @@ public class MainActivity extends YouTubeBaseActivity implements
 
 		YouTubePlayerView youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
 		youTubeView.initialize(Utils.DEVELOPER_KEY, this);
+		MyBus.getInstance().register(this);
 		doLayout();
 
 	}
@@ -110,9 +108,10 @@ public class MainActivity extends YouTubeBaseActivity implements
 
 	}
 
-	@SuppressWarnings("unchecked")
 	private void additems(ArrayList<Song> music, final boolean refreshOnly) {
-		final ProgressDialog dialog = new ProgressDialog(this);
+		
+		DownloadMusic dl = new DownloadMusic("http://randomsong.impecabel.com/json_query.php?size=10");
+		/*final ProgressDialog dialog = new ProgressDialog(this);
 
 		dialog.setMessage("Loading...");
 		dialog.show();
@@ -139,7 +138,7 @@ public class MainActivity extends YouTubeBaseActivity implements
 						flag_loading = false;
 
 					}
-				});
+				});*/
 		dl.execute(music);
 	}
 
@@ -261,6 +260,18 @@ public class MainActivity extends YouTubeBaseActivity implements
 		view.setImageResource(R.drawable.ic_launcher);
 		loader.setVideo(videoId);
 
+	}
+
+	@Override
+	protected void onDestroy() {
+		MyBus.getInstance().unregister(this);
+		super.onDestroy();
+	}
+
+	@Subscribe
+	public void onAsyncTaskResult(AsyncTaskResultEvent event) {
+		Toast.makeText(this, "done", Toast.LENGTH_LONG).show();
+		changeSelected(1);
 	}
 
 }
