@@ -57,6 +57,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 	private View otherViews;
 	private boolean fullscreen;
+	private boolean isPlaying = false;
 
 	private RetainedFragment dataFragment;
 	private YouTubePlayerView youTubeView;
@@ -351,6 +352,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 		@Override
 		public void onPaused() {
+			isPlaying = false;
 			ImageView ivPlayButton = (ImageView) findViewById(R.id.mediaControlPlay);
 			ivPlayButton.setImageResource(android.R.drawable.ic_media_play);
 
@@ -358,6 +360,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 		@Override
 		public void onPlaying() {
+			isPlaying = true;
 			ImageView ivPlayButton = (ImageView) findViewById(R.id.mediaControlPlay);
 			ivPlayButton.setImageResource(android.R.drawable.ic_media_pause);
 		}
@@ -388,7 +391,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 		@Override
 		public void onError(ErrorReason reason) {
-			changeSelected(1, player.isPlaying());
+			changeSelected(1, isPlaying);
 
 		}
 
