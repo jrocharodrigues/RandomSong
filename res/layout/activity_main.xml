@@ -5,15 +5,15 @@
     android:layout_height="fill_parent"
     android:gravity="right"
     android:orientation="vertical"
-    android:weightSum="100" >
+    android:weightSum="100" 
+    android:padding="0dp">
 
-    <com.google.android.youtube.player.YouTubePlayerView
-        android:id="@+id/youtube_view"
+    <fragment
+        android:id="@+id/youtube_fragment"
+        android:name="com.google.android.youtube.player.YouTubePlayerFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="50" />
-
-    <!-- android:listSelector="@drawable/list_selector" -->
 
     <LinearLayout
         android:id="@+id/other_views"
@@ -32,7 +32,7 @@
         <include
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:layout_margin="10dp"
+            android:layout_marginTop="10dp"
             android:layout_weight="10"
             layout="@layout/player_controls" />
     </LinearLayout>

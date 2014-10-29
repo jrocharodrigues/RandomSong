@@ -1,18 +1,15 @@
 package com.impecabel.randomsong;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 import java.util.ArrayList;
 
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -21,12 +18,12 @@ import android.widget.Toast;
 
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubePlayerView;
-import com.google.android.youtube.player.YouTubeThumbnailLoader;
-import com.google.android.youtube.player.YouTubeThumbnailView;
 import com.google.android.youtube.player.YouTubePlayer.ErrorReason;
 import com.google.android.youtube.player.YouTubePlayer.PlaybackEventListener;
 import com.google.android.youtube.player.YouTubePlayer.PlayerStateChangeListener;
+import com.google.android.youtube.player.YouTubePlayerFragment;
+import com.google.android.youtube.player.YouTubeThumbnailLoader;
+import com.google.android.youtube.player.YouTubeThumbnailView;
 import com.google.android.youtube.player.YouTubeThumbnailView.OnInitializedListener;
 import com.impecabel.randomsong.DownloadMusic.OnFinish;
 
@@ -60,7 +57,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 	private boolean isPlaying = false;
 
 	private RetainedFragment dataFragment;
-	private YouTubePlayerView youTubeView;
+	private YouTubePlayerFragment youTubePlayerFragment;
 	private Song empty_song = new Song();
 	private MyPlayerStateChangeListener myPlayerStateChangeListener;
 	private MyPlaybackEventListener myPlaybackEventListener;
@@ -76,8 +73,9 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		setContentView(R.layout.activity_main);
 		otherViews = findViewById(R.id.other_views);
 
-		youTubeView = (YouTubePlayerView) findViewById(R.id.youtube_view);
-		youTubeView.initialize(Utils.DEVELOPER_KEY, this);
+		youTubePlayerFragment = (YouTubePlayerFragment) getFragmentManager()
+				.findFragmentById(R.id.youtube_fragment);
+		youTubePlayerFragment.initialize(Utils.DEVELOPER_KEY, this);
 
 		doLayout();
 
@@ -140,8 +138,8 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 	}
 
 	private void doLayout() {
-		LinearLayout.LayoutParams playerParams = (LinearLayout.LayoutParams) youTubeView
-				.getLayoutParams();
+		LinearLayout.LayoutParams playerParams = (LinearLayout.LayoutParams) youTubePlayerFragment
+				.getView().getLayoutParams();
 
 		if (fullscreen) {
 			playerParams.width = LayoutParams.MATCH_PARENT;
@@ -324,7 +322,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 	@Override
 	protected YouTubePlayer.Provider getYouTubePlayerProvider() {
-		return youTubeView;
+		return youTubePlayerFragment;
 	}
 
 	@Override

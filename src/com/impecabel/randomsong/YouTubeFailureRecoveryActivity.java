@@ -16,18 +16,18 @@
 
 package com.impecabel.randomsong;
 
-import com.google.android.youtube.player.YouTubeBaseActivity;
+import android.content.Intent;
+import android.support.v7.app.ActionBarActivity;
+import android.widget.Toast;
+
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
-
-import android.content.Intent;
-import android.widget.Toast;
 
 /**
  * An abstract activity which deals with recovering from errors which may occur during API
  * initialization, but can be corrected through user action.
  */
-public abstract class YouTubeFailureRecoveryActivity extends YouTubeBaseActivity implements
+public abstract class YouTubeFailureRecoveryActivity extends ActionBarActivity implements
     YouTubePlayer.OnInitializedListener {
 
   private static final int RECOVERY_DIALOG_REQUEST = 1;
