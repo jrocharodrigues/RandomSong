@@ -51,19 +51,19 @@ public class CustomAdapter extends BaseAdapter implements
 			convertView = inflater.inflate(R.layout.music_item, null);
 			YouTubeThumbnailView ytThumb = (YouTubeThumbnailView) convertView
 					.findViewById(R.id.youtubethumbnailview);
-			ytThumb.setTag(Utils.TEST_VIDEO);
-			ytThumb.initialize(Utils.DEVELOPER_KEY, this);
+			ytThumb.setTag(RandomSongUtils.TEST_VIDEO);
+			ytThumb.initialize(RandomSongUtils.DEVELOPER_KEY, this);
 		} else {
 			YouTubeThumbnailView thumbnail = (YouTubeThumbnailView) convertView
 					.findViewById(R.id.youtubethumbnailview);
 			YouTubeThumbnailLoader loader = loaders.get(thumbnail);
 			if (loader == null) {
 				// Case 3 - The loader is currently initializing
-				thumbnail.setTag(Utils.TEST_VIDEO);
+				thumbnail.setTag(RandomSongUtils.TEST_VIDEO);
 			} else {
 				// Case 2 - The loader is already initialized
 				thumbnail.setImageResource(R.drawable.ic_launcher);
-				loader.setVideo(Utils.TEST_VIDEO);
+				loader.setVideo(RandomSongUtils.TEST_VIDEO);
 			}
 
 		}
