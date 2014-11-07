@@ -2,6 +2,7 @@ package com.impecabel.randomsong;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.app.FragmentManager;
@@ -12,7 +13,6 @@ import android.os.Bundle;
 import android.support.v7.app.MediaRouteButton;
 import android.support.v7.media.MediaRouter.RouteInfo;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -20,7 +20,9 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.common.api.Status;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayer.ErrorReason;
@@ -31,9 +33,12 @@ import com.google.android.youtube.player.YouTubeThumbnailLoader;
 import com.google.android.youtube.player.YouTubeThumbnailView;
 import com.google.android.youtube.player.YouTubeThumbnailView.OnInitializedListener;
 import com.google.sample.castcompanionlibrary.cast.BaseCastManager;
-import com.google.sample.castcompanionlibrary.cast.VideoCastManager;
+import com.google.sample.castcompanionlibrary.cast.DataCastManager;
+import com.google.sample.castcompanionlibrary.cast.callbacks.DataCastConsumerImpl;
+import com.google.sample.castcompanionlibrary.cast.callbacks.IDataCastConsumer;
 import com.google.sample.castcompanionlibrary.cast.callbacks.IVideoCastConsumer;
-import com.google.sample.castcompanionlibrary.cast.callbacks.VideoCastConsumerImpl;
+import com.google.sample.castcompanionlibrary.cast.exceptions.NoConnectionException;
+import com.google.sample.castcompanionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
 import com.google.sample.castcompanionlibrary.widgets.MiniController;
 import com.impecabel.randomsong.DownloadMusic.OnFinish;
 
@@ -74,11 +79,14 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 	/* Cast Stuff */
 	private static final String TAG = "MainActivity";
-	private VideoCastManager mVideoCastManager;
+	// private VideoCastManager mVideoCastManager;
 	private MediaRouteButton mMediaRouteButton;
 	private MiniController mMini;
 	private IVideoCastConsumer mVideoCastConsumer;
+	private IDataCastConsumer mDataCastConsumer;
 	private MediaInfo mSelectedMedia;
+
+	private DataCastManager mDataCastManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -86,20 +94,48 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		BaseCastManager.checkGooglePlayServices(this);
 		setContentView(R.layout.activity_main);
 
-		mVideoCastManager = CastApplication.getCastManager(this);
+		// mVideoCastManager = CastApplication.getCastManager(this);
+		mDataCastManager = CastApplication.getDataCastManager(this);
 		mMediaRouteButton = (MediaRouteButton) findViewById(R.id.media_route_button);
-		mVideoCastManager.addMediaRouterButton(mMediaRouteButton);
+		mDataCastManager.addMediaRouterButton(mMediaRouteButton);
 
-		mMini = (MiniController) findViewById(R.id.miniController1);
-		mVideoCastManager.addMiniController(mMini);
+		// mMini = (MiniController) findViewById(R.id.miniController1);
+		// mVideoCastManager.addMiniController(mMini);
 
-		new VideoProvider();
-		mSelectedMedia = VideoProvider.buildMediaInfo(RandomSongUtils.title,
-				RandomSongUtils.subtitle, RandomSongUtils.studio,
-				RandomSongUtils.url, RandomSongUtils.imgUrl,
-				RandomSongUtils.bigImageUrl, RandomSongUtils.tracks);
-
-		mVideoCastConsumer = new VideoCastConsumerImpl() {
+		/*
+		 * new VideoProvider(); mSelectedMedia =
+		 * VideoProvider.buildMediaInfo(RandomSongUtils.title,
+		 * RandomSongUtils.subtitle, RandomSongUtils.studio,
+		 * RandomSongUtils.url, RandomSongUtils.imgUrl,
+		 * RandomSongUtils.bigImageUrl, RandomSongUtils.tracks);
+		 * 
+		 * mVideoCastConsumer = new VideoCastConsumerImpl() {
+		 * 
+		 * @Override public void onFailed(int resourceId, int statusCode) {
+		 * 
+		 * }
+		 * 
+		 * @Override public void onConnectionSuspended(int cause) { Log.d(TAG,
+		 * "onConnectionSuspended() was called with cause: " + cause);
+		 * 
+		 * Toast.makeText(getApplicationContext(),
+		 * R.string.connection_temp_lost, Toast.LENGTH_LONG) .show(); }
+		 * 
+		 * @Override public void onConnectivityRecovered() {
+		 * 
+		 * Toast.makeText(getApplicationContext(),
+		 * R.string.connection_recovered, Toast.LENGTH_LONG) .show(); }
+		 * 
+		 * @Override public void onCastDeviceDetected(final RouteInfo info) { //
+		 * TODO }
+		 * 
+		 * @Override public void onCastAvailabilityChanged(boolean castPresent)
+		 * { mMediaRouteButton.setVisibility(castPresent ? View.VISIBLE :
+		 * View.INVISIBLE); }
+		 * 
+		 * };
+		 */
+		mDataCastConsumer = new DataCastConsumerImpl() {
 
 			@Override
 			public void onFailed(int resourceId, int statusCode) {
@@ -135,6 +171,20 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 						: View.INVISIBLE);
 			}
 
+			@Override
+			public void onMessageReceived(CastDevice castDevice,
+					String namespace, String message) {
+			}
+
+
+			@Override
+			public void onMessageSendFailed(Status status) {
+				// TODO Auto-generated method stub
+				super.onMessageSendFailed(status);
+			}
+
+			
+
 		};
 
 		otherViews = findViewById(R.id.other_views);
@@ -168,16 +218,17 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 				refreshCards();
 			}
 		}
-		mVideoCastManager.reconnectSessionIfPossible(this, false);
+		mDataCastManager.reconnectSessionIfPossible(this, false);
 	}
 
 	@Override
 	protected void onResume() {
 
-		mVideoCastManager = CastApplication.getCastManager(this);
-		if (null != mVideoCastManager) {
-			mVideoCastManager.addVideoCastConsumer(mVideoCastConsumer);
-			mVideoCastManager.incrementUiCounter();
+		mDataCastManager = CastApplication.getDataCastManager(this);
+		if (null != mDataCastManager) {
+			// mVideoCastManager.addVideoCastConsumer(mVideoCastConsumer);
+			mDataCastManager.addDataCastConsumer(mDataCastConsumer);
+			mDataCastManager.incrementUiCounter();
 		}
 
 		super.onResume();
@@ -186,20 +237,18 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 	@Override
 	protected void onPause() {
-		mVideoCastManager.decrementUiCounter();
-		mVideoCastManager.removeVideoCastConsumer(mVideoCastConsumer);
+		mDataCastManager.decrementUiCounter();
+		// mVideoCastManager.removeVideoCastConsumer(mVideoCastConsumer);
+		mDataCastManager.removeDataCastConsumer(mDataCastConsumer);
 		super.onPause();
 	}
 
-	@Override
-	public boolean dispatchKeyEvent(KeyEvent event) {
-		if (mVideoCastManager.onDispatchVolumeKeyEvent(event,
-				CastApplication.VOLUME_INCREMENT)) {
-			return true;
-		}
-		return super.dispatchKeyEvent(event);
-	}
-
+	/*
+	 * @Override public boolean dispatchKeyEvent(KeyEvent event) { if
+	 * (mVideoCastManager.onDispatchVolumeKeyEvent(event,
+	 * CastApplication.VOLUME_INCREMENT)) { return true; } return
+	 * super.dispatchKeyEvent(event); }
+	 */
 	private void refreshCards() {
 
 		int backCardSongPos = cards.get(BACK_CARD_ID).getSong_position();
@@ -270,7 +319,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 		super.onDestroy();
 		// store the data in the fragment
 		dataFragment.setData(music, cards, selectedListItem);
-		mVideoCastManager.removeMiniController(mMini);
+		// mVideoCastManager.removeMiniController(mMini);
 	}
 
 	void populateCard(View cardView, Song song, int position, int cardPosition) {
@@ -336,10 +385,32 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 
 		if (v == findViewById(R.id.mediaControlPrev)) {
 			// changeSelected(-1, false);
-			//mVideoCastManager.startCastControllerActivity(context, mSelectedMedia,
-			//		position, autoPlay);
-			mVideoCastManager.startCastControllerActivity(this,
-					mSelectedMedia, 0, false);
+			// mVideoCastManager.startCastControllerActivity(context,
+			// mSelectedMedia,
+			// position, autoPlay);
+			/*
+			 * mVideoCastManager.startCastControllerActivity(this,
+			 * mSelectedMedia, 0, true);
+			 */
+			try {
+				mDataCastManager.sendDataMessage("Fusaaaao",
+						RandomSongUtils.NAMESPACE);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalStateException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TransientNetworkDisconnectionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoConnectionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 		} else if (v == findViewById(R.id.mediaControlNext)) {
 			changeSelected(1, false);
