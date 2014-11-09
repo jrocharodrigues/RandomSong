@@ -15,7 +15,7 @@ public class RandomSongUtils {
     public static final String TEST_VIDEO = "9dEW2OE_joU"; 
     public static final String PREFS_NAME = "randomSongPrefsFile";
     public static final String APP_ID = "1CBBAB48";
-    public static final String NAMESPACE = "urn:x-cast:com.ls.cast.sample";
+    public static final String NAMESPACE = "urn:x-cast:com.impecabel.randomsong";
     
     
     /*cast*/

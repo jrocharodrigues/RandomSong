@@ -393,7 +393,7 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 			 * mSelectedMedia, 0, true);
 			 */
 			try {
-				mDataCastManager.sendDataMessage("Fusaaaao",
+				mDataCastManager.sendDataMessage("{'event':'loadVideo','videoId':'" + RandomSongUtils.TEST_VIDEO + "'}",
 						RandomSongUtils.NAMESPACE);
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
