@@ -5,6 +5,9 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.pm.ActivityInfo;
@@ -174,16 +177,16 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 			@Override
 			public void onMessageReceived(CastDevice castDevice,
 					String namespace, String message) {
+				Log.d(TAG, "MessageReceived was called with message: "
+						+ message);
 			}
-
 
 			@Override
 			public void onMessageSendFailed(Status status) {
 				// TODO Auto-generated method stub
+				Log.d(TAG, "onMessageSendFailed failed with status: " + status);
 				super.onMessageSendFailed(status);
 			}
-
-			
 
 		};
 
@@ -393,22 +396,29 @@ public class MainActivity extends YouTubeFailureRecoveryActivity implements
 			 * mSelectedMedia, 0, true);
 			 */
 			try {
-				mDataCastManager.sendDataMessage("{'event':'loadVideo','videoId':'" + RandomSongUtils.TEST_VIDEO + "'}",
+				JSONObject payload = new JSONObject();
+				// TODO change to constants
+				payload.put("type", "loadVideo");
+				payload.put("videoId", music.get(selectedListItem).getVideo_id());
+				mDataCastManager.sendDataMessage(payload.toString(),
 						RandomSongUtils.NAMESPACE);
 			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
+				Log.d(TAG, "IllegalArgumentException was  raised");
 				e.printStackTrace();
 			} catch (IllegalStateException e) {
-				// TODO Auto-generated catch block
+				Log.d(TAG, "IllegalArgumentException was  raised");
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				Log.d(TAG, "IllegalStateException was  raised");
 				e.printStackTrace();
 			} catch (TransientNetworkDisconnectionException e) {
-				// TODO Auto-generated catch block
+				Log.d(TAG, "TransientNetworkDisconnectionException was  raised");
 				e.printStackTrace();
 			} catch (NoConnectionException e) {
-				// TODO Auto-generated catch block
+				Log.d(TAG, "NoConnectionException was  raised");
+				e.printStackTrace();
+			} catch (JSONException e) {
+				Log.e(TAG, "Cannot create JSON object");
 				e.printStackTrace();
 			}
 

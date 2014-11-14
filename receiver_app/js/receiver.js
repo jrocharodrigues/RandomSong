@@ -1,9 +1,11 @@
-	var receiver = new cast.receiver.Receiver(cfg.appId, [cfg.msgNamespace],"",5);
-	var ytChannelHandler = new cast.receiver.ChannelHandler(cfg.msgNamespace);
+	cast.receiver.logger.setLevelValue(0);
+	var receiver = cast.receiver.CastReceiverManager.getInstance();
+	console.log('Starting Receiver Manager');
+	var ytChannelHandler = receiver.getCastMessageBus(cfg.msgNamespace, cast.receiver.CastMessageBus.MessageType.JSON);
 	var channel;
-	ytChannelHandler.addChannelFactory(receiver.createChannelFactory(cfg.msgNamespace));
+	//ytChannelHandler.addChannelFactory(receiver.createChannelFactory(cfg.msgNamespace));
 	ytChannelHandler.addEventListener(
-		cast.receiver.Channel.EventType.MESSAGE,
+		cast.receiver.CastMessageBus.EventType.MESSAGE,
 		onMessage.bind(this)
 	);
 
@@ -22,7 +24,7 @@
 			channel=event.target;
 		},
 		"loadVideo": function(event) {
-			player.cueVideoById(event.message.videoId);
+			player.loadVideoById(event.data.videoId);
 		},
 		"stopCasting": function() {
 			endcast();
@@ -37,7 +39,7 @@
 			player.stopVideo();
 		},
 		"getStatus": function() {
-			channel.send({'event':'statusCheck','message':player.getPlayerState()});
+			ytChannelHandler.broadcast({'event':'statusCheck','message':player.getPlayerState()});
 		}
 	};
 
@@ -54,18 +56,21 @@
 	}
 
 	function onPlayerReady() {
-		channel.send({'event':'iframeApiReady','message':'ready'});
+		ytChannelHandler.broadcast({'event':'iframeApiReady','message':'ready'});
 	}
 
 	function onPlayerStateChange(event) {
-		channel.send({'event':'stateChange','message':event.data});
+		ytChannelHandler.broadcast({'event':'stateChange','message':event.data});
 		if (event.data==YT.PlayerState.ENDED) {
 			endcast();
 		}
 	}
 
 	function onMessage(event) {
-		ytMessages[event.message.type](event);
+		console.log('Message [' + event.senderId + ']: ' + event.data);
+
+		ytMessages[event.data.type](event);
+		//player.loadVideoById(event.data);
     }
 
 	function endcast() {
