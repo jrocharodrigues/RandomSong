@@ -7,11 +7,21 @@
 <script src="js/config.js"></script>
 <script src="js/receiver.js"></script>
 <style>
-#wrapper {
-	width: 1280px;
-	height: 720px;
-	margin: 10px auto;
-	text-align: center;
+.wrapper {
+    float: none;
+    clear: both;
+    width: 100%;
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top: 0;
+    height: 0;
+}
+.wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 #annotation {
 	color: #ffcccc;
@@ -21,9 +31,9 @@
 </style>
 </head>
 <body>
-<div id="wrapper">
+<div class="wrapper">
 <div id="player"></div>
-<div id="annotation"></div>
+<!--<div id="annotation"></div>-->
 </div>
 </body>
 </html>
